@@ -19,7 +19,19 @@ import {
   serializePresencePayload,
   type PresenceState
 } from "@pracuje-roman/core";
-import { env } from "./env.js";
+import { loadEnv } from "./env.js";
+
+async function idleUntilConfigured(missingKeys: string[]): Promise<never> {
+  console.warn(
+    `[worker] missing required env vars: ${missingKeys.join(", ")}. ` +
+      "Worker is idle until configuration is completed."
+  );
+
+  return await new Promise(() => undefined);
+}
+
+const envResult = loadEnv();
+const env = envResult.ok ? envResult.env : await idleUntilConfigured(envResult.missingKeys);
 
 type LatestState = {
   presence: Presence | null;

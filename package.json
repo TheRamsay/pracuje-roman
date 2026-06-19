@@ -6,12 +6,12 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace @pracuje-roman/core --workspace @pracuje-roman/db --workspace worker --workspace web",
-    "dev:web": "npm run dev --workspace web",
-    "dev:worker": "npm run dev --workspace worker",
-    "test": "npm run test --workspace @pracuje-roman/core --workspace web --if-present",
-    "db:generate": "npm run db:generate --workspace @pracuje-roman/db",
-    "db:migrate": "npm run db:migrate --workspace @pracuje-roman/db"
+    "build": "npm --prefix packages/core run build && npm --prefix packages/db run build && npm --prefix apps/worker run build && npm --prefix apps/web run build",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:worker": "npm --prefix apps/worker run dev",
+    "test": "npm --prefix packages/core run test && npm --prefix apps/web run test",
+    "db:generate": "npm --prefix packages/db run db:generate",
+    "db:migrate": "npm --prefix packages/db run db:migrate"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",

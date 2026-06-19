@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { z } from "zod";
+import { z, type ZodFormattedError } from "zod";
 
 dotenv.config();
 
@@ -14,4 +14,34 @@ const envSchema = z.object({
 
 export type WorkerEnv = z.infer<typeof envSchema>;
 
-export const env = envSchema.parse(process.env);
+export type WorkerEnvLoadResult =
+  | {
+      ok: true;
+      env: WorkerEnv;
+    }
+  | {
+      ok: false;
+      error: ZodFormattedError<WorkerEnv>;
+      missingKeys: string[];
+    };
+
+export function loadEnv(source: NodeJS.ProcessEnv = process.env): WorkerEnvLoadResult {
+  const parsed = envSchema.safeParse(source);
+
+  if (parsed.success) {
+    return {
+      ok: true,
+      env: parsed.data
+    };
+  }
+
+  const missingKeys = Object.entries(parsed.error.flatten().fieldErrors)
+    .filter(([, errors]) => (errors ?? []).length > 0)
+    .map(([key]) => key);
+
+  return {
+    ok: false,
+    error: parsed.error.format(),
+    missingKeys
+  };
+}
