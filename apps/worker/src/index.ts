@@ -260,6 +260,7 @@ if (!envResult.ok) {
       const guild = await readyClient.guilds.fetch(env.DISCORD_GUILD_ID);
       const member = await guild.members.fetch(env.DISCORD_USER_ID);
       await loadInitialPresence(member);
+      await flushLatestState("startup");
     } catch (error) {
       console.error("[worker] failed to load initial presence", error);
     }
