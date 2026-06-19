@@ -1,0 +1,23 @@
+{
+  "name": "pracuje-roman",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @pracuje-roman/core --workspace @pracuje-roman/db --workspace worker --workspace web",
+    "dev:web": "npm run dev --workspace web",
+    "dev:worker": "npm run dev --workspace worker",
+    "test": "npm run test --workspace @pracuje-roman/core --workspace web --if-present",
+    "db:generate": "npm run db:generate --workspace @pracuje-roman/db",
+    "db:migrate": "npm run db:migrate --workspace @pracuje-roman/db"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.4",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
