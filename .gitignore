@@ -6,3 +6,5 @@ coverage
 .env.local
 apps/**/.next
 packages/db/migrations/meta
+
+*.tsbuildinfo
