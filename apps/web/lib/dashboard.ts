@@ -1,4 +1,5 @@
 import { desc, eq } from "drizzle-orm";
+import { unstable_noStore as noStore } from "next/cache";
 import { isWowActivityName, shouldSayRomanWorks } from "@pracuje-roman/core";
 import { createDb, gameSessions, presenceObservations } from "@pracuje-roman/db";
 
@@ -59,6 +60,8 @@ function isRetryableDbError(error: unknown): boolean {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
+  noStore();
+
   const env = getRequiredEnv();
 
   if (!env) {
