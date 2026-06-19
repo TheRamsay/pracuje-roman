@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "rm -rf node_modules/next && next build",
-    "start": "node .next/standalone/server.js",
+    "start": "next start",
     "test": "vitest run"
   },
   "dependencies": {

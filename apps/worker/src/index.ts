@@ -21,6 +21,9 @@ import {
 } from "@pracuje-roman/core";
 import { loadEnv } from "./env.js";
 
+const DB_RETRY_ATTEMPTS = 10;
+const DB_RETRY_DELAY_MS = 5_000;
+
 function idleUntilConfigured(missingKeys: string[]): void {
   console.warn(
     `[worker] missing required env vars: ${missingKeys.join(", ")}. ` +
@@ -60,6 +63,51 @@ if (!envResult.ok) {
   };
 
   let flushInFlight: Promise<void> | null = null;
+
+  function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function isRetryableDbError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+      return false;
+    }
+
+    const message = error.message.toUpperCase();
+
+    return (
+      message.includes("ETIMEDOUT") ||
+      message.includes("ECONNREFUSED") ||
+      message.includes("ENETUNREACH") ||
+      message.includes("CONNECT")
+    );
+  }
+
+  async function withDbRetry<T>(label: string, operation: () => Promise<T>): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= DB_RETRY_ATTEMPTS; attempt += 1) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+
+        if (!isRetryableDbError(error) || attempt === DB_RETRY_ATTEMPTS) {
+          throw error;
+        }
+
+        console.warn(
+          `[worker] ${label} failed on attempt ${attempt}/${DB_RETRY_ATTEMPTS}. ` +
+            `Retrying in ${DB_RETRY_DELAY_MS / 1000}s.`
+        );
+        await sleep(DB_RETRY_DELAY_MS);
+      }
+    }
+
+    throw lastError;
+  }
 
   function activityTypeToLabel(type: number): string {
     return ActivityType[type] ?? `unknown:${type}`;
@@ -148,18 +196,20 @@ if (!envResult.ok) {
   }
 
   async function persistSnapshot(snapshot: LatestState): Promise<void> {
-    await db.insert(presenceObservations).values({
-      discordUserId: env.DISCORD_USER_ID,
-      observedAt: snapshot.state.observedAt,
-      status: snapshot.state.status,
-      activityName: snapshot.state.currentActivity?.name ?? null,
-      activityType: snapshot.state.currentActivity?.type ?? null,
-      isWow: snapshot.state.isWow,
-      activityStartedAt: snapshot.state.currentActivity?.startedAt ?? null,
-      rawJson: serializePresencePayload(snapshot.presence)
-    });
+    await withDbRetry("persist snapshot", async () => {
+      await db.insert(presenceObservations).values({
+        discordUserId: env.DISCORD_USER_ID,
+        observedAt: snapshot.state.observedAt,
+        status: snapshot.state.status,
+        activityName: snapshot.state.currentActivity?.name ?? null,
+        activityType: snapshot.state.currentActivity?.type ?? null,
+        isWow: snapshot.state.isWow,
+        activityStartedAt: snapshot.state.currentActivity?.startedAt ?? null,
+        rawJson: serializePresencePayload(snapshot.presence)
+      });
 
-    await upsertSessionState(db, snapshot.state);
+      await upsertSessionState(db, snapshot.state);
+    });
   }
 
   async function flushLatestState(reason: string): Promise<void> {
@@ -199,17 +249,25 @@ if (!envResult.ok) {
   async function loadInitialPresence(member: GuildMember): Promise<void> {
     await member.fetch(true);
     updateLatestPresence(member.presence ?? null, new Date());
-    await upsertSessionState(db, latestState.state);
+    await withDbRetry("load initial presence", async () => {
+      await upsertSessionState(db, latestState.state);
+    });
   }
 
   client.once(Events.ClientReady, async (readyClient) => {
     console.info(`[worker] logged in as ${readyClient.user.tag}`);
-    const guild = await readyClient.guilds.fetch(env.DISCORD_GUILD_ID);
-    const member = await guild.members.fetch(env.DISCORD_USER_ID);
-    await loadInitialPresence(member);
+    try {
+      const guild = await readyClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const member = await guild.members.fetch(env.DISCORD_USER_ID);
+      await loadInitialPresence(member);
+    } catch (error) {
+      console.error("[worker] failed to load initial presence", error);
+    }
 
     setInterval(() => {
-      void flushLatestState("interval");
+      void flushLatestState("interval").catch((error) => {
+        console.error("[worker] failed to flush interval snapshot", error);
+      });
     }, env.SNAPSHOT_INTERVAL_MINUTES * 60_000);
   });
 
@@ -219,7 +277,14 @@ if (!envResult.ok) {
     }
 
     updateLatestPresence(newPresence, new Date());
-    await upsertSessionState(db, latestState.state);
+
+    try {
+      await withDbRetry("presence update", async () => {
+        await upsertSessionState(db, latestState.state);
+      });
+    } catch (error) {
+      console.error("[worker] failed to persist presence update", error);
+    }
   });
 
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
