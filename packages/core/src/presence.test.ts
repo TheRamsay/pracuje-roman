@@ -54,6 +54,7 @@ describe("diffGameSessions", () => {
   });
 
   it("closes and restarts when the game changes", () => {
+    const observedAt = new Date("2026-06-19T10:10:00Z");
     const transition = diffGameSessions({
       activeSession: {
         id: "session-1",
@@ -66,12 +67,33 @@ describe("diffGameSessions", () => {
         name: "Counter-Strike 2",
         type: "Playing",
         startedAt: null,
-        lastObservedAt: new Date("2026-06-19T10:10:00Z")
-      }
+        lastObservedAt: observedAt
+      },
+      observedAt
     });
 
     expect(transition.shouldCloseSessionId).toBe("session-1");
+    expect(transition.closeEndedAt).toEqual(observedAt);
     expect(transition.shouldStartSession?.gameName).toBe("Counter-Strike 2");
+  });
+
+  it("closes the session at the current observation time when activity disappears", () => {
+    const observedAt = new Date("2026-06-19T20:45:00Z");
+    const transition = diffGameSessions({
+      activeSession: {
+        id: "session-1",
+        gameName: "World of Warcraft",
+        startedAt: new Date("2026-06-19T20:41:00Z"),
+        lastObservedAt: new Date("2026-06-19T20:41:00Z"),
+        isActive: true
+      },
+      currentActivity: null,
+      observedAt
+    });
+
+    expect(transition.shouldCloseSessionId).toBe("session-1");
+    expect(transition.closeEndedAt).toEqual(observedAt);
+    expect(transition.shouldStartSession).toBeNull();
   });
 });
 

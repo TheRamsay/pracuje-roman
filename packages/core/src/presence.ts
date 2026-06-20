@@ -114,8 +114,10 @@ export function derivePresenceState(input: PresenceInput): PresenceState {
 export function diffGameSessions(input: {
   activeSession: ActiveSessionShape | null;
   currentActivity: GameActivity | null;
+  observedAt?: Date;
 }): SessionTransition {
-  const { activeSession, currentActivity } = input;
+  const { activeSession, currentActivity, observedAt } = input;
+  const effectiveObservedAt = observedAt ?? currentActivity?.lastObservedAt ?? activeSession?.lastObservedAt ?? null;
 
   if (!activeSession && !currentActivity) {
     return {
@@ -128,7 +130,7 @@ export function diffGameSessions(input: {
   if (activeSession && !currentActivity) {
     return {
       shouldCloseSessionId: activeSession.id,
-      closeEndedAt: activeSession.lastObservedAt,
+      closeEndedAt: effectiveObservedAt ?? activeSession.lastObservedAt,
       shouldStartSession: null
     };
   }
@@ -163,7 +165,7 @@ export function diffGameSessions(input: {
 
   return {
     shouldCloseSessionId: activeSession.id,
-    closeEndedAt: activeSession.lastObservedAt,
+    closeEndedAt: effectiveObservedAt ?? activeSession.lastObservedAt,
     shouldStartSession: {
       gameName: currentActivity.name,
       startedAt: currentActivity.startedAt ?? currentActivity.lastObservedAt,

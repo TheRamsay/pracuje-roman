@@ -1,6 +1,10 @@
 export function formatDuration(totalSeconds: number | null | undefined) {
-  if (!totalSeconds || totalSeconds < 60) {
+  if (!totalSeconds || totalSeconds <= 0) {
     return "0m";
+  }
+
+  if (totalSeconds < 60) {
+    return "<1m";
   }
 
   const hours = Math.floor(totalSeconds / 3600);

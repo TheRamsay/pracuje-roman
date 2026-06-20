@@ -10,8 +10,8 @@ describe("formatDuration", () => {
     expect(formatDuration(7200)).toBe("2h");
   });
 
-  it("falls back to 0m for nullish or short durations", () => {
+  it("falls back to 0m for nullish values and shows sub-minute durations", () => {
     expect(formatDuration(null)).toBe("0m");
-    expect(formatDuration(42)).toBe("0m");
+    expect(formatDuration(42)).toBe("<1m");
   });
 });

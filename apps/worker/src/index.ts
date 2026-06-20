@@ -150,7 +150,8 @@ if (!envResult.ok) {
           isActive: activeSession.isActive
         }
       : null,
-    currentActivity
+    currentActivity,
+    observedAt: state.observedAt
   });
 
   if (transition.shouldCloseSessionId) {
