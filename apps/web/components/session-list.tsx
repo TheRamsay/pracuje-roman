@@ -49,15 +49,15 @@ export function SessionList({ sessions }: SessionListProps) {
             World of Warcraft
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text md:text-3xl">
-            Recent sessions
+            Nedávná hraní
           </h2>
         </div>
-        <p className="text-sm text-muted">{sessions.length} zaznamu</p>
+        <p className="text-sm text-muted">{sessions.length} záznamů</p>
       </div>
 
       {groups.length === 0 ? (
         <div className="rounded-lg border border-dashed border-line bg-panelMuted/60 px-5 py-8 text-sm text-muted">
-          Zatim nejsou k dispozici zadne WoW sessions.
+          Zatím nejsou k dispozici žádné záznamy o hraní WoW.
         </div>
       ) : (
         <div className="grid gap-4">
@@ -76,18 +76,18 @@ export function SessionList({ sessions }: SessionListProps) {
                     <div className="grid gap-1">
                       <p className="text-sm font-medium text-text">
                         {formatTime(session.startedAt)} -{" "}
-                        {session.endedAt ? formatTime(session.endedAt) : "bezi"}
+                        {session.endedAt ? formatTime(session.endedAt) : "běží"}
                       </p>
                       <p className="text-xs text-muted">
                         Start: {formatDateTime(session.startedAt)}
                       </p>
                       <p className="text-xs text-muted">
-                        End: {session.endedAt ? formatDateTime(session.endedAt) : "Aktivni session"}
+                        Konec: {session.endedAt ? formatDateTime(session.endedAt) : "Aktivní hraní"}
                       </p>
                     </div>
 
                     <div className="flex items-center text-sm text-muted md:justify-end">
-                      {session.endedAt ? "Dokonceno" : "Aktivni"}
+                      {session.endedAt ? "Dokončeno" : "Aktivní"}
                     </div>
 
                     <div className="flex items-center justify-start md:justify-end">

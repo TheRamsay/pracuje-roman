@@ -37,10 +37,10 @@ function XIcon() {
 }
 
 export function HeroStatus({ worksNow, latestObservation }: HeroStatusProps) {
-  const activityLabel = latestObservation?.activityName ?? "Bez zname aktivity";
+  const activityLabel = latestObservation?.activityName ?? "Bez známé aktivity";
   const observedLabel = latestObservation
     ? formatDateTime(latestObservation.observedAt)
-    : "Zatim bez pozorovani";
+    : "Zatím bez pozorování";
 
   return (
     <section className="relative overflow-hidden rounded-lg border border-line bg-panel shadow-panel">
@@ -49,7 +49,7 @@ export function HeroStatus({ worksNow, latestObservation }: HeroStatusProps) {
         <div className="space-y-6">
           <div className="space-y-3">
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-accent/80">
-              Presence Dashboard
+              Přehled aktivity
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-text md:text-6xl">
               Pracuje Roman?
@@ -69,14 +69,14 @@ export function HeroStatus({ worksNow, latestObservation }: HeroStatusProps) {
           </div>
 
           <p className="max-w-2xl text-sm leading-7 text-muted md:text-base">
-            Posledni zachycena aktivita: <span className="text-text">{activityLabel}</span>. Hero
-            odpoved je odvozena ciste z boolean hodnoty pro aktualni stav.
+            Poslední zachycená aktivita: <span className="text-text">{activityLabel}</span>.
+            Odpověď v hero sekci vychází čistě z boolean hodnoty pro aktuální stav.
           </p>
         </div>
 
         <aside className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-muted">Posledni update</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Poslední update</p>
             <p className="mt-2 text-xl font-medium text-text">{observedLabel}</p>
           </div>
           <div className="grid gap-2 border-t border-white/10 pt-3 text-sm text-muted">
@@ -87,7 +87,7 @@ export function HeroStatus({ worksNow, latestObservation }: HeroStatusProps) {
             <div className="flex items-center justify-between gap-4">
               <span>WoW</span>
               <span className={latestObservation?.isWow ? "text-danger" : "text-ok"}>
-                {latestObservation?.isWow ? "Bezi" : "Ne"}
+                {latestObservation?.isWow ? "Běží" : "Ne"}
               </span>
             </div>
           </div>
